@@ -7,7 +7,7 @@ from autoCG import chem
 from autoCG.utils import process
 
 
-def sample_from_crest(molecule,constraints=[],working_directory = None,num_process = 1):
+def sample_from_crest(molecule,constraints=[],working_directory = None,num_process = 1,opt_option = 'vtight'):
     if working_directory == None:
         working_directory = os.getcwd()
     current_directory = os.getcwd()
@@ -17,7 +17,7 @@ def sample_from_crest(molecule,constraints=[],working_directory = None,num_proce
     molecule.write_geometry('R.xyz')
 
     # Make constraints.inp file if exist ...
-    command = f'crest R.xyz -T {num_process} --noreftopo'
+    command = f'crest R.xyz -T {num_process} --noreftopo -opt {opt_option}'
     force = 0.25
 
     if len(constraints) > 0:

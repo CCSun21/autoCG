@@ -63,8 +63,6 @@ class UFFOptimizer:
         process.locate_molecule(molecule, new_coords)
        
   
-
-
     def optimize_geometry(
         self, molecule, constraints=[], maximal_displacement = 1000, k = 50,add_atom_constraint = False):
         

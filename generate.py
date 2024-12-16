@@ -344,6 +344,8 @@ class GuessGenerator:
 
         # Stereo sampling first, if activated ...
         if self.enumerate_stereo:
+            self.write_log('Considering stereoisomer enumeration ...'+'\n')
+            st = datetime.datetime.now()
             final_ts_molecules = []
             valency_list = np.sum(adj_matrix,axis=1)
             complex_indices = np.where(valency_list>4)[0].tolist()
@@ -359,15 +361,21 @@ class GuessGenerator:
                 )
                 final_ts_molecules += enumerated_ts_molecules
             ts_molecules = final_ts_molecules
-
+            et = datetime.datetime.now()
+            content =f'Total stereoisomer enumeration time: {et-st}' 
+            print (content)
+            self.write_log(content+'\n')
         ts_molecules = self.get_no_repeating_molecules(ts_molecules)
-        
+       
+        self.write_log(f'Total {len(ts_molecules)} molecules enumerated ... \n\n') 
         # Adjust to TS ...
         for i in range(len(ts_molecules)):
             self.adjust_to_ts(ts_molecules[i],reaction_info,original_z_list)
 
         # Perform CREST here ...
         if self.use_crest:
+            self.write_log('Performing CREST for searching lowest TS conformer ...'+'\n')
+            st = datetime.datetime.now()
             # Perform CREST and re generate RP pairs in CREST folder ...
             final_ts_molecules = []
             constraints = reaction_info['b'] + reaction_info['f']
@@ -380,10 +388,12 @@ class GuessGenerator:
                     #print ('1################################')
                     #print (conformer.energy)
                     #conformer.print_coordinate_list()
+                
                 final_ts_molecules += conformers[:self.num_conformer]
-            
+            self.write_log(f'Final ts molecules: {len(final_ts_molecules)}\n')
             #random.shuffle(final_ts_molecules)
             # Remove repeating molecules ... (Almost same energy ...)
+            print ([ts_molecule.energy for ts_molecule in final_ts_molecules])
             final_ts_molecules = self.get_no_repeating_molecules(final_ts_molecules)
             # Sort by conformer energy ...
             #final_ts_molecules = sorted(final_ts_molecules, key=lambda ts_molecule:ts_molecule.energy)
@@ -398,25 +408,47 @@ class GuessGenerator:
         #        self.calculator.relax_geometry(ts_molecule,constraints,num_relaxation = 100)
         #        print ('af')
         #        ts_molecule.print_coordinate_list()
+            et = datetime.datetime.now()
+            content =f'Total CREST execution time: {et-st}' 
+            print (content)
+            self.write_log(content+'\n\n')
+
         print ('Final generated TS structures:',len(ts_molecules))
         return ts_molecules, reactant_atom_stereo_infos, reactant_bond_stereo_infos
 
 
     def adjust_to_ts(self,molecule,reaction_info,original_z_list):
         constraints = dict()
+        ts_z_list = molecule.get_z_list()
+        
+        for i in range(len(original_z_list)):
+            molecule.atom_list[i].set_atomic_number(int(original_z_list[i]))
+      
         for bond in molecule.get_bond_list(False):
             start, end = bond
             r1 = molecule.atom_list[start].get_radius()
-            r2 = molecule.atom_list[end].get_radius()
+            r2 = molecule.atom_list[end].get_radius()            
             if bond in reaction_info['b'] + reaction_info['f']:
                 constraints[bond] = (r1+r2) * self.ts_scale
             else:
                 constraints[bond] = (r1+r2) * self.form_scale
+        
+        # Get back to ts z list ...
+        for i in range(len(ts_z_list)):
+            molecule.atom_list[i].set_atomic_number(int(ts_z_list[i]))
+
+        print ('Before restore ...')
+        molecule.print_coordinate_list()
+
         self.scale_bonds(molecule,constraints)
+        
         fixing_atoms = []
         molecule.print_coordinate_list()
+
         self.uff_optimizer.optimize_geometry(molecule,constraints,k=2000,add_atom_constraint = False)
+        print ('After TS adjustment ...')
         molecule.print_coordinate_list()
+        # Really restore into original z list ...
         for i in range(len(original_z_list)):
             molecule.atom_list[i].set_atomic_number(int(original_z_list[i]))
 
@@ -493,6 +525,9 @@ class GuessGenerator:
         self.write_optimization(molecule, file_name, "w")
         status_q = dict()
         num_step = 0
+        file_addition = ''
+        if file_name is not None:
+            file_addition += file_name[6]
         for bond in formed_bonds:
             start, end = bond
             d = molecule.get_distance_between_atoms(start, end)
@@ -555,7 +590,7 @@ class GuessGenerator:
                     update_q,
                     chg=None,
                     multiplicity=None,
-                    file_name="relax",
+                    file_name=f"scan_{i+1}_{file_addition}",
                     num_relaxation=self.scan_num_relaxation,
                     maximal_displacement=self.scan_qc_step_size,
                 )
@@ -585,13 +620,16 @@ class GuessGenerator:
         old_content = self.calculator.content
         if self.h_content is not None:
             self.calculator.content = self.h_content
+        addition = ''
+        if file_name is not None:
+            addition += file_name[4]
         for i in range(self.num_step):
             self.calculator.relax_geometry_steep(
                 reactant,
                 constraints,
                 None,
                 None,
-                "test",
+                f"relax_{i+1}_{addition}",
                 self.num_relaxation,
                 self.qc_step_size,
             )
@@ -655,7 +693,7 @@ class GuessGenerator:
         self.calculator.clean_scratch()
         sd = self.save_directory
         print ('Starting generation ...')
-        if True:
+        if True: # Later change into try/except ...
             reactant_molecules = ts_molecule.copy()
             reactant_molecules.energy = ts_molecule.energy
             product_molecules = ts_molecule.copy()
@@ -761,8 +799,13 @@ class GuessGenerator:
                 if not os.path.exists(save_directory):
                     print("Path does not exist! Guess is generated without log file!")
                     save_directory = None
-        if working_directory is None or not os.path.exists(working_directory):
+        if working_directory is None:
             working_directory = save_directory
+        elif not os.path.exists(working_directory):
+            os.makedirs(working_directory,exist_ok=True)
+            if not os.path.exists(working_directory):
+                working_directory = save_directory
+
         if working_directory is not None:
             if self.calculator.working_directory == os.getcwd():
                 self.calculator.change_working_directory(working_directory)
@@ -794,6 +837,16 @@ class GuessGenerator:
         self.write_log(f"Starting time: {starttime}\n\n")
         self.write_log(f"All guesses will be saved in {self.save_directory}\n")
 
+        # Check reaction_info
+        bond_breaks = reaction_info['b']
+        adj_matrix = reactant.get_adj_matrix()
+        for bond in bond_breaks:
+            s, e = bond
+            if adj_matrix[s][e] == 0:
+                print ('Wrong reaction info is given !!!')
+                print ('Check the input again !!!')
+                exit()
+
         if reaction_info is None:
             self.write_log("Finding reaction information with gurobi!\n")
             if reactant is None or product is None:
@@ -809,17 +862,6 @@ class GuessGenerator:
                 exit()
         else:
             self.write_log("Using the provided reaction!\n")
-
-        # Check reaction_info
-        bond_breaks = reaction_info['b']
-        adj_matrix = reactant.get_adj_matrix()
-        for bond in bond_breaks:
-            s, e = bond
-            if adj_matrix[s][e] == 0:
-                print ('Wrong reaction info is given !!!')
-                print ('Check the input again !!!')
-                exit()
-
         reactant_copy = reactant.copy()
         if chg is not None:
             reactant_copy.chg = chg
@@ -888,7 +930,7 @@ class GuessGenerator:
         bond_list = molecule.get_bond_list(False)
         self.write_log("Set up done!!!\n")
         if chg is None:
-            chg = molecule.get_chg()
+            chg = molecule.chg
             if chg is None:
                 print("Charge is not given !!!")
         if multiplicity is None:
@@ -919,7 +961,10 @@ class GuessGenerator:
                 new_save_directory = None
             
             if True:
+                st = datetime.datetime.now()
                 reactant_molecules, product_molecules = self.generate_RP_pair(ts_molecule,reaction_info,chg,multiplicity,new_save_directory,working_directory)
+                et = datetime.datetime.now()
+                self.write_log(f'Generation time for {i+1}th reaction conformation: {et - st}\n')
                 self.calculator.clean_scratch()
                 matching_result = self.identify_connectivity(reactant_molecules, reduced_reactant, product_molecules, reduced_product)
                 reactant_molecules.bo_matrix = reduced_reactant.bo_matrix
@@ -970,6 +1015,11 @@ class GuessGenerator:
         )
         # All molecules here, are in ts connectivity matrix!!! To reset, need to remove bonds using reaction_info
         endtime = datetime.datetime.now()
+
+        self.write_log(
+            f"Taken Time: {endtime - starttime}\n"
+        )
+
         
         # Reset working and save directory
         self.save_directory = None
@@ -994,36 +1044,12 @@ class GuessGenerator:
         product_smiles = smiles_list[1]
         # Reactant must have geometry ...
         # rd_reactant = Chem.MolFromSmiles(reactant_smiles)
-
         reactant = chem.Intermediate(reactant_smiles)
         product = chem.Intermediate(product_smiles)
-        
-        # Check atom mapping ...
-        reaction_info = None
-        n = len(reactant.atom_list)
-        if str(n) in reactant_smiles:
-            print ('mapping exists !!!')
-            r_adj_matrix = reactant.get_adj_matrix()
-            p_adj_matrix = product.get_adj_matrix()
-            bond_forms = np.stack(np.where(p_adj_matrix > r_adj_matrix),axis=1).tolist()
-            bond_breaks = np.stack(np.where(p_adj_matrix < r_adj_matrix),axis=1).tolist()
-
-            reaction_info = dict()
-            reaction_info['b'] = []
-            reaction_info['f'] = []
-            for bond_form in bond_forms:
-                s, e = bond_form
-                if s < e:
-                    reaction_info['f'].append((s,e))
-            for bond_break in bond_breaks:
-                s, e = bond_break
-                if s < e:
-                    reaction_info['b'].append((s,e))
-
         return self.get_oriented_RPs(
             reactant,
             product,
-            reaction_info,
+            None,
             chg=chg,
             multiplicity=multiplicity,
             save_directory=save_directory,
@@ -1120,6 +1146,13 @@ if __name__ == "__main__":
         default="rdkit",
     )
     parser.add_argument(
+        "--calculator",
+        "-ca",
+        type=str,
+        help="Using calculator for constraint optimization",
+        default="orca",
+    )
+    parser.add_argument(
         "--num_conformer",
         "-nc",
         type=int,
@@ -1137,7 +1170,7 @@ if __name__ == "__main__":
         "--num_relaxation",
         "-nr",
         type=int,
-        help="Number of relaxation during conformation relaxation",
+        help="Number of relaxation during each scan",
         default=7,
     )
 
@@ -1291,12 +1324,7 @@ if __name__ == "__main__":
     save_directory = args.save_directory
     working_directory = args.working_directory
     print("generator.py input options", sys.argv[1])
-    try:
-        calculator_name = os.environ['CALCULATOR']
-    except:
-        calculator_name = 'gaussian'
-    
-    if calculator_name == "gaussian":
+    if args.calculator == "gaussian":
         calculator = gaussian.Gaussian()
     else:
         calculator = orca.Orca()

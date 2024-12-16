@@ -11,10 +11,10 @@ import distutils.spawn
 
 import numpy as np
 
-import cclib
 ### ace-reaction libraries ###
-import process
-import chem
+from autoCG.utils import process
+from autoCG import chem
+
 
 '''
 You can define your own calculator, depending on your using software!!!
@@ -266,16 +266,20 @@ class Orca:
         self.basis = basis
 
     def get_default_mol_params(self,molecule):
-        chg = molecule.get_chg()
-        if chg is None:
+        try:
+            chg = molecule.get_chg()
+        except:
             chg = 0
         try:
-            e_list = molecule.get_num_of_lone_pair_list()
-            num_of_unpaired_e = len(np.where((2*e_list) % 2 == 1)[0])
-            multiplicity = num_of_unpaired_e + 1
-        except:
-            z_sum = np.sum(molecule.get_z_list())
-            multiplicity = (z_sum - chg) % 2 + 1
+            multiplicity = molecule.get_multiplicity()
+        except: 
+            try:
+                e_list = molecule.get_num_of_lone_pair_list()
+                num_of_unpaired_e = len(np.where((2*e_list) % 2 == 1)[0])
+                multiplicity = num_of_unpaired_e + 1
+            except:
+                z_sum = np.sum(molecule.get_z_list())
+                multiplicity = (z_sum - chg) % 2 + 1
         return chg,multiplicity
 
     def make_input(self,molecules,chg, multiplicity, file_name='test',constraints={},extra=''):
@@ -358,11 +362,14 @@ class Orca:
         os.chdir(self.working_directory)
         self.make_input([molecule],chg,multiplicity,file_name=file_name,extra=extra)
         os.system(f'{self.command} {file_name}.com > {file_name}.log')
-        energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.energy'))
-        if energy is None:
-            energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.log'))
-        if energy is None or abs(energy) < 0.0000001:
-            energy, force = parse_force(os.path.join(self.working_directory,f'{file_name}.engrad'))
+        #if 'xtb' in str.lower(self.content):
+            #energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.energy'))
+        #else:
+        #    energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.log'))
+        try:
+            energy,force = parse_force(os.path.join(self.working_directory,f'{file_name}.{file_name}_XTB.engrad')) 
+        except:
+            energy,force = parse_force(os.path.join(self.working_directory,f'{file_name}.engrad')) 
         self.move_file(file_name,save_directory)
         converter = 1
         if energy is None:
@@ -374,9 +381,9 @@ class Orca:
                     f.write(f'Check {os.path.join(self.working_directory,name)} ...\n')
             return None
         if self.energy_unit == 'kcal':
-            converter = 627.509
+            converter = 627.509474
         if self.energy_unit == 'eV':
-            converter = 27.2114079527
+            converter = 27.211386245988
         os.chdir(current_directory)
         return converter*energy
 
@@ -453,7 +460,9 @@ class Orca:
                 extra = extra + 'Constraints\n'
             for constraint in constraints:
                 constraint_info = []
-                if len(constraint) == 2:
+                if len(constraint) == 1:
+                    constraint_info.append('{C')
+                elif len(constraint) == 2:
                     constraint_info.append('{B')
                 elif len(constraint) == 3:
                     constraint_info.append('{A')
@@ -479,15 +488,16 @@ class Orca:
                     f.write(f'Check {os.path.join(self.working_directory,name)} ...\n')
             return []
         energy,force = parse_force(os.path.join(self.working_directory,f'{file_name}.engrad')) 
-
-        if abs(energy) < 0.000001:
-            energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.energy'))
+        #print('energy:',energy)
+        #if 'xtb' in str.lower(self.content):
+        #    energy = parse_energy(os.path.join(self.working_directory,f'{file_name}.energy'))
+        #print('energy:',energy)
         process.locate_molecule(molecule,relaxing_path[-1].get_coordinate_list())
         molecule.energy = energy
         os.chdir(current_directory)
         return relaxing_path
 
-    def relax_geometry(self,molecule,constraints,chg=None,multiplicity=None,file_name='opt',num_relaxation=5,maximal_displacement=1000,extra='',save_directory=None):
+    def relax_geometry(self,molecule,constraints=[],chg=None,multiplicity=None,file_name='opt',num_relaxation=5,maximal_displacement=1000,extra='',save_directory=None):
         '''
         '''
         extra = '\n%geom\n'
