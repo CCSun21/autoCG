@@ -16,8 +16,8 @@ import numpy as np
 
 from scipy import spatial
 
-from autoCG.utils import am
-from autoCG import chem
+from autocg.utils import am
+from autocg import chem
 
 visit=[] 
 visited_V=[]

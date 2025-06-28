@@ -9,8 +9,8 @@ from rdkit.Chem import FindMolChiralCenters, FindPotentialStereoBonds
 from scipy.spatial.transform import Rotation
 
 ### ace-reaction libraries ###
-from autoCG import chem
-from autoCG.utils import conformation, process
+from autocg import chem
+from autocg.utils import conformation, process
 
 
 def powerset(l):
@@ -218,20 +218,20 @@ if __name__ == "__main__":
 
     from rdkit import Chem
 
-    mol = chem.Molecule("/home/leejinwon/autoCG/stereochemistry/initial_ts.xyz")
-    # mol = chem.Molecule("/home/leejinwon/autoCG/stereochemistry/DACP2_ts.xyz")
+    mol = chem.Molecule("/home/leejinwon/autocg/stereochemistry/initial_ts.xyz")
+    # mol = chem.Molecule("/home/leejinwon/autocg/stereochemistry/DACP2_ts.xyz")
     # mol = chem.Molecule("C/C=C\C=CC=CC")
     # process.locate_molecule(mol, mol.make_3d_coordinate())
-    # mol = Chem.MolFromXYZFile("/home/leejinwon/autoCG/stereochemistry/initial_ts.xyz")
-    # mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/tetra_before.xyz")
-    # mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/_before.xyz")
-    # mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/db_before.xyz")
+    # mol = Chem.MolFromXYZFile("/home/leejinwon/autocg/stereochemistry/initial_ts.xyz")
+    # mol.write_geometry("/home/leejinwon/autocg/stereochemistry/tetra_before.xyz")
+    # mol.write_geometry("/home/leejinwon/autocg/stereochemistry/_before.xyz")
+    # mol.write_geometry("/home/leejinwon/autocg/stereochemistry/db_before.xyz")
     changeRS(mol, 1, 2, 7)
     # changeEZ(mol,(1, 2))
     # conformers = sampleEZ(mol, scope=None, check_EZ=False)
     # for conformer in conformers:
-    #    conformer.write_geometry("/home/leejinwon/autoCG/stereochemistry/db_sample.xyz")
+    #    conformer.write_geometry("/home/leejinwon/autocg/stereochemistry/db_sample.xyz")
 
-    mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/tetra_after.xyz")
-    # mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/endo_after.xyz")
-    # mol.write_geometry("/home/leejinwon/autoCG/stereochemistry/db_after.xyz")
+    mol.write_geometry("/home/leejinwon/autocg/stereochemistry/tetra_after.xyz")
+    # mol.write_geometry("/home/leejinwon/autocg/stereochemistry/endo_after.xyz")
+    # mol.write_geometry("/home/leejinwon/autocg/stereochemistry/db_after.xyz")

@@ -2,9 +2,9 @@ import os
 import numpy as np
 
 
-from autoCG import chem
+from autocg import chem
 
-from autoCG.utils import frag
+from autocg.utils import frag
 
 visit=[] 
 visited_V=[]

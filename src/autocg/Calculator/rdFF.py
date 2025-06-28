@@ -11,8 +11,8 @@ from rdkit.Chem.rdForceFieldHelpers import (
 import rdkit.ForceField.rdForceField as FF
 
 ### ace-reaction libraries ###
-from autoCG import chem
-from autoCG.utils import process
+from autocg import chem
+from autocg.utils import process
 
 
 def get_rd_mol3D(ace_mol):
@@ -160,7 +160,7 @@ class UFFOptimizer:
         process.locate_molecule(molecule, new_coords)
         '''
 
-    ### wrapper function for autoCG
+    ### wrapper function for autocg
     def relax_geometry(
         self,
         molecule,
@@ -179,7 +179,7 @@ class UFFOptimizer:
     def clean_geometry(self):
         pass
 
-    ### dummy functions for compatibility with autoCG
+    ### dummy functions for compatibility with autocg
     def change_working_directory(self, path):
         pass
 

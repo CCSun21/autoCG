@@ -12,8 +12,8 @@ import distutils.spawn
 import numpy as np
 
 ### ace-reaction libraries ###
-from autoCG.utils import process
-from autoCG import chem
+from autocg.utils import process
+from autocg import chem
 
 
 '''
@@ -199,7 +199,7 @@ class Orca:
             exit()
         self.command = command
         self.nproc=1
-        self.content = '! XTB2 '
+        self.content = '! XTB2 EnGrad '
         self.energy_unit = 'Hartree'
         #self.distance_unit = 'Bohr'
         #self.radian_unit = 'Radian'

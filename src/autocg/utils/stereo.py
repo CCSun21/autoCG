@@ -5,10 +5,10 @@ import random
 import sys
 import itertools
 
-from autoCG import chem
-from autoCG.utils import frag
-from autoCG.utils.ic import *
-from autoCG.utils import process
+from autocg import chem
+from autocg.utils import frag
+from autocg.utils.ic import *
+from autocg.utils import process
 
 import rdkit
 from rdkit import Chem

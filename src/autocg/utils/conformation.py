@@ -3,8 +3,8 @@ import os
 
 from scipy.spatial.transform import Rotation
 
-from autoCG import chem 
-from autoCG.utils import process
+from autocg import chem 
+from autocg.utils import process
 
 
 def sample_from_crest(molecule,constraints=[],working_directory = None,num_process = 1,opt_option = 'vtight'):

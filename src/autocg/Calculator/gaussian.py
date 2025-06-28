@@ -15,8 +15,8 @@ import distutils.spawn
 import cclib
 
 ### ace-reaction libraries ###
-from autoCG import chem
-from autoCG.utils import process
+from autocg import chem
+from autocg.utils import process
 
 # Ugly fix for cclib error which occurs when 
 # only two rotational constants are given.

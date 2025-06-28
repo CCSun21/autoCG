@@ -9,9 +9,9 @@ from scipy import spatial
 import numpy as np
 import itertools
 
-from autoCG.utils import ic
-from autoCG.utils import process
-from autoCG.utils import make_smiles
+from autocg.utils import ic
+from autocg.utils import process
+from autocg.utils import make_smiles
 
 
 class Atom:

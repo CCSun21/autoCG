@@ -10,8 +10,8 @@ import random
 
 from rdkit import Chem
 
-from autoCG import chem
-from autoCG.utils import frag
+from autocg import chem
+from autocg.utils import frag
 
 from scipy import spatial
 

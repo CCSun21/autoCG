@@ -1,0 +1,16 @@
+[project]
+name = "autocg"
+version = "0.1.0"
+description = "Automated Complex Generator"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "kyunghoonlee777", email = "kyunghoonlee@kaist.ac.kr"}]
+dependencies = [
+    "cclib>=1.8.1",
+    "numpy>=2.2.6",
+    "rdkit>=2025.3.3",
+    "scipy>=1.15.3",
+]
+
+[project.scripts]
+autocg = "autocg.generate:main"

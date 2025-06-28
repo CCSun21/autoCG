@@ -2,7 +2,7 @@ import numpy as np
 import time
 import pickle
 
-from autoCG.utils.mapping import ReactionMap
+from autocg.utils.mapping import ReactionMap
 
 
 def get_net_reacted_molecules(intermediate_i,intermediate_j):
@@ -209,7 +209,7 @@ def get_bond_change(intermediate_i,intermediate_j,num_solution = 1):
 
 
 if __name__ == '__main__':
-    from autoCG import chem
+    from autocg import chem
     im1 = chem.Intermediate('N.CCl')
     im2 = chem.Intermediate('C[NH3+].[Cl-]')
     #print (chem_dist_calculator.get_chem_distance(im1,im2))

@@ -18,9 +18,9 @@ from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
 
 ### ace-reaction libraries ###
-from autoCG import chem
-from autoCG.Calculator import gaussian, orca, rdFF
-from autoCG.utils import arranger, ic, process, stereo, conformation
+from autocg import chem
+from autocg.Calculator import gaussian, orca, rdFF
+from autocg.utils import arranger, ic, process, stereo, conformation
 
 
 class GuessGenerator:
@@ -1118,11 +1118,10 @@ class GuessGenerator:
             save_directory=save_directory,
             working_directory=working_directory,
         )
-
-
-if __name__ == "__main__":
+    
+def main():
     sys.stdout = sys.__stdout__
-    print("hihihi", os.getcwd())
+    print("CWD:", os.getcwd())
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--save_directory",
@@ -1323,7 +1322,7 @@ if __name__ == "__main__":
     args = parser.parse_args(sys.argv[2:])
     save_directory = args.save_directory
     working_directory = args.working_directory
-    print("generator.py input options", sys.argv[1])
+    print("input options", sys.argv[1])
     if args.calculator == "gaussian":
         calculator = gaussian.Gaussian()
     else:
@@ -1342,20 +1341,18 @@ if __name__ == "__main__":
     generator.library = args.library
     generator.num_conformer = args.num_conformer
     generator.set_energy_criteria(args.energy_criteria)
-    generator.maximal_displcement = args.maximal_displacement
+    generator.maximal_displacement = args.maximal_displacement
     generator.k = args.k
     generator.scan_num_relaxation = args.scan_num_relaxation
     generator.scan_qc_step_size = args.scan_qc_step_size
     generator.window = args.window
     generator.num_process = args.num_process
-        
     generator.use_crest = bool(args.use_crest)
     generator.enumerate_stereo = bool(args.stereo_enumerate)
     generator.check_connectivity = bool(args.check_connectivity)
     generator.check_stereo = bool(args.check_stereo)
-
     generator.preoptimize = bool(args.preoptimize)
-    print (generator.preoptimize)
+    print(generator.preoptimize)
 
     if ">>" in sys.argv[1]:
         (
@@ -1371,15 +1368,14 @@ if __name__ == "__main__":
     else:
         input_directory = sys.argv[1]
         folder_directory = os.path.dirname(input_directory)
-        if folder_directory is None:
+        if not folder_directory:
             folder_directory = os.getcwd()
         if save_directory is None:
             save_directory = folder_directory
-         
         # Check h_content
         if args.use_h_content == 1:
             try:
-                h_file_directory = os.path.join(folder_directory,'h_content')
+                h_file_directory = os.path.join(folder_directory, 'h_content')
                 h_content = ''
                 with open(h_file_directory) as f:
                     for line in f:
@@ -1400,3 +1396,6 @@ if __name__ == "__main__":
             save_directory=save_directory,
             working_directory=working_directory,
         )
+
+if __name__ == "__main__":
+    main()
